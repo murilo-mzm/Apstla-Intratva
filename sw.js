@@ -1,5 +1,5 @@
-/* Apostila Interativa: versão e397772e6fab */
-const CACHE = "apostila-e397772e6fab", FONTS = "apostila-fonts";
+/* Apostila Interativa: versão e99c5900283f */
+const CACHE = "apostila-e99c5900283f", FONTS = "apostila-fonts";
 const CORE = ["./", "index.html", "manifest.webmanifest", "favicon.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => {

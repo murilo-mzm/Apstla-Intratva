@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
+<script>window.__PWA__ = 1;</script>
 <meta name="description" content="Apostila interativa de Pediatria e Psiquiatria: lições curtas, fichas, provas por tema e questões comentadas.">
 <meta name="theme-color" content="#F3F3FB">
 <link rel="manifest" href="manifest.webmanifest">
@@ -730,6 +731,30 @@ body {
 .sync-btn[hidden] { display: none !important; }
 .brand-logo, .hero-duck, .done-duck { cursor: pointer; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; -webkit-user-drag: none; }
 
+/* ---------- convite para instalar como app ---------- */
+.inst-slot:empty { display: none; }
+.inst-slot { margin: 0 0 22px; }
+.inst-card { position: relative; display: flex; align-items: center; gap: 18px; padding: 18px 20px; overflow: hidden; }
+.inst-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--brand-grad); }
+.inst-ico { width: 64px; height: 64px; flex: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(30, 31, 77, .18); }
+.inst-txt { flex: 1; min-width: 0; }
+.inst-txt h3 { margin: 0 0 4px; font: 750 18px/1.25 var(--f-display); }
+.inst-txt p { margin: 0; font-size: 14.5px; line-height: 1.45; }
+.inst-how { margin-top: 8px !important; padding: 8px 11px; border-radius: 10px; background: var(--cover-soft); color: var(--ink); font: 500 14px/1.45 var(--f-display); }
+.inst-share { width: 17px; height: 17px; vertical-align: -3px; color: var(--cover); }
+.inst-act { display: flex; flex-direction: column; gap: 8px; flex: none; }
+.inst-slim { display: flex; justify-content: flex-end; margin-top: -8px; }
+.inst-slim .link { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; }
+.inst-slim svg { width: 16px; height: 16px; }
+@media (max-width: 560px) {
+  .inst-card { flex-wrap: wrap; gap: 12px 14px; padding: 16px; }
+  .inst-ico { width: 52px; height: 52px; border-radius: 12px; }
+  .inst-txt { flex-basis: calc(100% - 70px); }
+  .inst-act { flex-direction: row; width: 100%; }
+  .inst-act .btn { flex: 1; }
+}
+@media print { .inst-slot { display: none; } }
+
 </style>
 </head>
 <body>
@@ -920,6 +945,7 @@ function menu() {
       h("p", { class: "eyebrow" }, "Apostila Interativa"),
       h("h1", null, "Escolha a matéria e continue de onde parou."),
       h("p", { class: "lede" }, "Cada matéria tem lições curtas que ensinam fazendo, fichas para revisar, provas por tema e as questões de treino oficiais com gabarito comentado. O progresso, o XP e as questões de cada matéria ficam salvos separadamente.")),
+    installSlot(),
     h("div", { class: "subjects" }, cards),
     h("section", { class: "sheet bk-card" },
       h("div", null, h("h3", null, "Backup do progresso"), h("p", { class: "muted" }, h("span", { class: "sync-line" }, syncText()), " " + lastBackupText())),
@@ -3054,6 +3080,57 @@ function quackDuck(img) {
 }
 document.addEventListener("click", e => { const d = e.target.closest && e.target.closest(".brand-logo, .hero-duck, .done-duck"); if (d) quackDuck(d); });
 function duckEl(cls) { return h("img", { class: cls, src: duckSrc(), alt: "", "aria-hidden": "true", draggable: "false" }); }
+
+/* ---------- convite para instalar como app (só na versão publicada no GitHub Pages) ---------- */
+const INSTALL = (() => {
+  const KEY = "apostila.install";
+  let evt = null;
+  const ua = navigator.userAgent;
+  const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const macSafari = !isIOS && /Macintosh/.test(ua) && /Safari\//.test(ua) && !/Chrome|Chromium|CriOS|Edg|Firefox|OPR/.test(ua);
+  const SHARE = '<svg class="inst-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m8 7 4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
+  const PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7v7"/><path d="m9 11 3 3 3-3"/></svg>';
+  addEventListener("beforeinstallprompt", e => { e.preventDefault(); evt = e; refresh(); });
+  addEventListener("appinstalled", () => { evt = null; refresh(); toast("Pronto: a apostila foi instalada como app."); });
+  function mode() {
+    if (!window.__PWA__ || standalone()) return null;
+    if (evt) return "prompt";
+    if (isIOS) return "ios";
+    if (macSafari) return "mac";
+    return null;
+  }
+  const isDismissed = () => { try { return !!localStorage.getItem(KEY); } catch (e) { return false; } };
+  function setDismissed(v) { try { v ? localStorage.setItem(KEY, String(Date.now())) : localStorage.removeItem(KEY); } catch (e) {} refresh(); }
+  async function install() {
+    if (!evt) return;
+    const e = evt; evt = null;
+    try { e.prompt(); const c = await e.userChoice; if (c && c.outcome === "dismissed") evt = null; } catch (err) {}
+    refresh();
+  }
+  function card(m) {
+    if (isDismissed()) {
+      return h("div", { class: "inst-slim" }, h("button", { class: "link", html: PHONE + "<span>Instalar a apostila como app</span>", onclick: () => setDismissed(false) }));
+    }
+    const how = m === "ios" ? h("p", { class: "inst-how", html: `No Safari, toque em ${SHARE} <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.` })
+      : m === "mac" ? h("p", { class: "inst-how", html: "No Safari, abra o menu <b>Arquivo</b> e escolha <b>Adicionar ao Dock</b>." })
+      : null;
+    return h("section", { class: "sheet inst-card", "aria-label": "Instalar como app" },
+      h("img", { class: "inst-ico", src: "icon-192.png", alt: "", width: "64", height: "64" }),
+      h("div", { class: "inst-txt" },
+        h("h3", null, "Instale a apostila como app"),
+        h("p", { class: "muted" }, "Abre em tela cheia, com o ícone do patinho na tela inicial, e funciona mesmo sem internet."),
+        how),
+      h("div", { class: "inst-act" },
+        m === "prompt" ? h("button", { class: "btn pri", onclick: install }, "Instalar app") : null,
+        h("button", { class: "btn ghost", onclick: () => setDismissed(true) }, m === "prompt" ? "Agora não" : "Entendi")));
+  }
+  function fill(slot) { const m = mode(); slot.replaceChildren(...(m ? [card(m)] : [])); }
+  function refresh() { document.querySelectorAll(".inst-slot").forEach(fill); }
+  function slot() { const s = h("div", { class: "inst-slot" }); fill(s); return s; }
+  return { slot, refresh };
+})();
+function installSlot() { return INSTALL.slot(); }
 
 /* ---------- início ---------- */
 function start() { route(); }
